@@ -1,4 +1,4 @@
-package com.netodevel.money_transfer;
+package com.netodevel.money_transfer.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

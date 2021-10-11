@@ -1,4 +1,4 @@
-package com.netodevel.money_transfer;
+package com.netodevel.money_transfer.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 

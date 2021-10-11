@@ -1,6 +1,6 @@
 package com.netodevel.seed;
 
-import com.netodevel.money_transfer.Account;
+import com.netodevel.money_transfer.entity.Account;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -24,6 +24,11 @@ public class PrepareData {
 
     @Transactional
     public void execute() {
+        var fromAccount = new Account();
+        fromAccount.accountId = "999";
+        fromAccount.amount = new BigDecimal("1000");
+        fromAccount.persist();
+
         var toAccountId = new Account();
         toAccountId.accountId = "777";
         toAccountId.amount = new BigDecimal("50");
