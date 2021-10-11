@@ -8,12 +8,14 @@ import io.restassured.RestAssured;
 import io.restassured.config.JsonConfig;
 import io.restassured.path.json.config.JsonPathConfig;
 import org.hamcrest.core.Is;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
+import javax.transaction.Transactional;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
 
@@ -34,6 +36,26 @@ class MoneyTransferResourceTest {
                 .jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL));
 
         tableAccounts = new org.assertj.db.type.Table(dataSource, "accounts");
+        prepareData();
+    }
+
+    @Transactional
+    public void prepareData() {
+        var fromAccount = new Account();
+        fromAccount.accountId = "999";
+        fromAccount.amount = new BigDecimal("1000");
+        fromAccount.persist();
+
+        var toAccountId = new Account();
+        toAccountId.accountId = "777";
+        toAccountId.amount = new BigDecimal("50");
+        toAccountId.persist();
+    }
+
+    @AfterEach
+    @Transactional
+    public void tearDown() {
+        Account.deleteAll();
     }
 
     @Test
@@ -44,6 +66,26 @@ class MoneyTransferResourceTest {
                 .body(new MoneyTransferRequest("999", "777", new BigDecimal("1000")))
                 .when().post("api/money-transfer")
                 .then().statusCode(201);
+    }
+
+    @Test
+    @DisplayName("given a to account invalid then should return status code 400")
+    public void shouldReturnBadRequest() {
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new MoneyTransferRequest("999", "xyz", new BigDecimal("1000")))
+                .when().post("api/money-transfer")
+                .then().statusCode(400);
+    }
+
+    @Test
+    @DisplayName("given a from account invalid then should return status code 400")
+    public void givenFromAccountInvalidShouldReturnBadRequest() {
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new MoneyTransferRequest("xasda", "777", new BigDecimal("1000")))
+                .when().post("api/money-transfer")
+                .then().statusCode(400);
     }
 
     @Test
@@ -60,10 +102,10 @@ class MoneyTransferResourceTest {
                 .when().post("api/money-transfer")
                 .then().body("fromAccount", Is.is("999"))
                 .body("toAccount", Is.is("777"))
-                .body("amount", Is.is(50));
+                .body("amount", Is.is(980.0F));
 
         BigDecimal amountAfterTransfer = amountByAccountId("999");
-        assertEquals(BigDecimal.valueOf(980L), amountAfterTransfer);
+        assertEquals(BigDecimal.valueOf(980L).longValue(), amountAfterTransfer.longValue());
     }
 
     @Test
