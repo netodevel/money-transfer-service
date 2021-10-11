@@ -47,15 +47,23 @@ class MoneyTransferResourceTest {
     }
 
     @Test
-    @DisplayName("given a money transfer valid then should return a full response")
+    @DisplayName("given a money transfer valid then should return amount decreased")
     public void shouldReturnDataOfMoneyTransfer() {
+        var accountInitial = Account.findByAccountId("999");
+        accountInitial.amount = new BigDecimal("1000");
+        accountInitial.accountId = "999";
+        accountInitial.persist();
+
         given()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new MoneyTransferRequest("999", "777", new BigDecimal("1000")))
+                .body(new MoneyTransferRequest("999", "777", new BigDecimal("20")))
                 .when().post("api/money-transfer")
                 .then().body("fromAccount", Is.is("999"))
                 .body("toAccount", Is.is("777"))
                 .body("amount", Is.is(50));
+
+        BigDecimal amountAfterTransfer = amountByAccountId("999");
+        assertEquals(BigDecimal.valueOf(980L), amountAfterTransfer);
     }
 
     @Test
@@ -69,13 +77,17 @@ class MoneyTransferResourceTest {
                 .when().post("api/money-transfer")
                 .then().statusCode(201);
 
-        BigDecimal amountAfterTransfer = (BigDecimal) tableAccounts.getRowsList()
-                .stream()
-                .filter(e -> e.getColumnValue("accountId").getValue().equals("777"))
-                .findFirst().get().getColumnValue("amount").getValue();
+        BigDecimal amountAfterTransfer = amountByAccountId("777");
 
         int greaterThan = 1;
         assertEquals(greaterThan, amountAfterTransfer.compareTo(amountBeforeTransfer));
+    }
+
+    private BigDecimal amountByAccountId(String s) {
+        return (BigDecimal) tableAccounts.getRowsList()
+                .stream()
+                .filter(e -> e.getColumnValue("accountId").getValue().equals(s))
+                .findFirst().get().getColumnValue("amount").getValue();
     }
 
     @Test
@@ -89,10 +101,7 @@ class MoneyTransferResourceTest {
                 .when().post("api/money-transfer")
                 .then().statusCode(201);
 
-        BigDecimal amountAfterTransfer = (BigDecimal) tableAccounts.getRowsList()
-                .stream()
-                .filter(e -> e.getColumnValue("accountId").getValue().equals("999"))
-                .findFirst().get().getColumnValue("amount").getValue();
+        BigDecimal amountAfterTransfer = amountByAccountId("999");
 
         int lessThen = -1;
         assertEquals(lessThen, amountAfterTransfer.compareTo(amountBeforeTransfer));
