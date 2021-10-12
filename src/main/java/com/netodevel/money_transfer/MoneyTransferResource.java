@@ -1,5 +1,6 @@
 package com.netodevel.money_transfer;
 
+import com.netodevel.config.AppException;
 import com.netodevel.money_transfer.dto.MoneyTransferRequest;
 import com.netodevel.money_transfer.dto.MoneyTransferResponse;
 import com.netodevel.money_transfer.entity.Account;
@@ -12,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static javax.ws.rs.core.Response.ok;
 
@@ -23,24 +25,27 @@ public class MoneyTransferResource {
     @POST
     @Transactional
     public Response moneyTransfer(MoneyTransferRequest moneyTransferRequest) {
-
         // decrease account
         var fromAccountId = Account.findByAccountId(moneyTransferRequest.fromAccount());
-        if (Objects.isNull(fromAccountId)) {
-            return Response.status(400).build();
-        }
+        validateAccount(fromAccountId, moneyTransferRequest.fromAccount());
+
         fromAccountId.amount = fromAccountId.amount.subtract(moneyTransferRequest.amount());
         fromAccountId.persist();
 
         // increases to account
         var toAccountId = Account.findByAccountId(moneyTransferRequest.toAccount());
-        if (Objects.isNull(toAccountId)) {
-            return Response.status(400).build();
-        }
+        validateAccount(toAccountId, moneyTransferRequest.toAccount());
+
         toAccountId.amount = toAccountId.amount.add(moneyTransferRequest.amount());
         toAccountId.persist();
 
         var response = new MoneyTransferResponse("999", "777", fromAccountId.amount);
         return ok(response).status(201).build();
+    }
+
+    private void validateAccount(Account fromAccountId, String accountRequested) {
+        if (Objects.isNull(fromAccountId)) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), String.format("accountId %s is not valid", accountRequested));
+        }
     }
 }
