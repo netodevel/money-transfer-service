@@ -102,14 +102,14 @@ class MoneyTransferResourceTest {
                 .when().post("api/money-transfer")
                 .then().body("fromAccount", Is.is("999"))
                 .body("toAccount", Is.is("777"))
-                .body("amount", Is.is(980.0F));
+                .body("amount", Is.is(980));
 
         BigDecimal amountAfterTransfer = amountByAccountId("999");
         assertEquals(BigDecimal.valueOf(980L).longValue(), amountAfterTransfer.longValue());
     }
 
     @Test
-    @DisplayName("given a money transfer should increment amount of account received")
+    @DisplayName("given a money transfer valid should increment amount of account received")
     public void shouldUpdatedDataBase() {
         var amountBeforeTransfer = Account.findByAccountId("777").amount;
 
@@ -126,10 +126,12 @@ class MoneyTransferResourceTest {
     }
 
     private BigDecimal amountByAccountId(String s) {
-        return (BigDecimal) tableAccounts.getRowsList()
+        Long longAmount = (Long) tableAccounts.getRowsList()
                 .stream()
-                .filter(e -> e.getColumnValue("accountId").getValue().equals(s))
+                .filter(e -> e.getColumnValue("account_id").getValue().equals(s))
                 .findFirst().get().getColumnValue("amount").getValue();
+
+        return new BigDecimal(longAmount);
     }
 
     @Test
@@ -148,5 +150,16 @@ class MoneyTransferResourceTest {
         int lessThen = -1;
         assertEquals(lessThen, amountAfterTransfer.compareTo(amountBeforeTransfer));
     }
+
+    @Test
+    @DisplayName("give a money transfer with insufficient funds then should return status code 409")
+    public void shouldReturnConflict() {
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new MoneyTransferRequest("999", "777", new BigDecimal("10000")))
+                .when().post("api/money-transfer")
+                .then().statusCode(409);
+    }
+
 
 }

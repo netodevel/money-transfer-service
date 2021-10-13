@@ -12,8 +12,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 import static javax.ws.rs.core.Response.ok;
 
@@ -25,10 +25,13 @@ public class MoneyTransferResource {
     @POST
     @Transactional
     public Response moneyTransfer(MoneyTransferRequest moneyTransferRequest) {
-        // decrease account
+
         var fromAccountId = Account.findByAccountId(moneyTransferRequest.fromAccount());
         validateAccount(fromAccountId, moneyTransferRequest.fromAccount());
+        //verify funds
+        validateFunds(fromAccountId.amount, moneyTransferRequest.amount());
 
+        // decrease account
         fromAccountId.amount = fromAccountId.amount.subtract(moneyTransferRequest.amount());
         fromAccountId.persist();
 
@@ -41,6 +44,12 @@ public class MoneyTransferResource {
 
         var response = new MoneyTransferResponse("999", "777", fromAccountId.amount);
         return ok(response).status(201).build();
+    }
+
+    private void validateFunds(BigDecimal amount, BigDecimal amount1) {
+        if (amount.compareTo(amount1) < 0) {
+            throw new AppException(Response.Status.CONFLICT.getStatusCode(), "Insufficient funds");
+        }
     }
 
     private void validateAccount(Account fromAccountId, String accountRequested) {
