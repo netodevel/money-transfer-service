@@ -115,7 +115,7 @@ class MoneyTransferResourceTest {
 
         given()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new MoneyTransferRequest("999", "777", new BigDecimal("1000")))
+                .body(new MoneyTransferRequest("999", "777", new BigDecimal("10")))
                 .when().post("api/money-transfer")
                 .then().statusCode(201);
 
