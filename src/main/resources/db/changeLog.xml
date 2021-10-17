@@ -4,5 +4,6 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
 
    <include file="changelogs/2021-10-12-222736-create-accounts.xml" relativeToChangelogFile="true"/>
+   <include file="changelogs/2021-10-17-170519-create-transfer-history.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
                                                               

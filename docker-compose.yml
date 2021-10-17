@@ -1,5 +1,12 @@
 version: "3"
 services:
+  app:
+    image: quarkus/money-transfer-service-native:latest
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
   postgres:
     image: postgres
     restart: always
@@ -9,4 +16,3 @@ services:
       POSTGRES_DB: money_transfer
     ports:
       - 5432:5433
-    network_mode: host

@@ -2,19 +2,17 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
-    <changeSet id="1" author="nt-cli">
 
-        <sql>
-            create sequence hibernate_sequence;
-        </sql>
-
-        <createTable tableName="accounts">
+    <changeSet id="2" author="nt-cli">
+        <createTable tableName="transfer_history">
             <column name="id" autoIncrement="true" type="BIGINT">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="account_id" type="varchar(255)"/>
+            <column name="from_account_id" type="varchar(255)"/>
+            <column name="to_account_id" type="varchar(255)"/>
             <column name="amount" type="BIGINT"/>
+            <column name="date_transfer" type="DATETIME"/>
         </createTable>
-
     </changeSet>
+
 </databaseChangeLog>

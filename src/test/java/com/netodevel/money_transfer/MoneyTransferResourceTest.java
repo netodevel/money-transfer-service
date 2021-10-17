@@ -3,6 +3,7 @@ package com.netodevel.money_transfer;
 
 import com.netodevel.money_transfer.dto.MoneyTransferRequest;
 import com.netodevel.money_transfer.entity.Account;
+import com.netodevel.money_transfer.entity.TransferHistory;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.config.JsonConfig;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.db.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
@@ -30,12 +32,15 @@ class MoneyTransferResourceTest {
 
     org.assertj.db.type.Table tableAccounts;
 
+    org.assertj.db.type.Table tableTransferHistory;
+
     @BeforeEach
     public void setUp() {
         RestAssured.config()
                 .jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL));
 
         tableAccounts = new org.assertj.db.type.Table(dataSource, "accounts");
+        tableTransferHistory = new org.assertj.db.type.Table(dataSource, "transfer_history");
         prepareData();
     }
 
@@ -56,6 +61,7 @@ class MoneyTransferResourceTest {
     @Transactional
     public void tearDown() {
         Account.deleteAll();
+        TransferHistory.deleteAll();
     }
 
     @Test
@@ -66,6 +72,21 @@ class MoneyTransferResourceTest {
                 .body(new MoneyTransferRequest("999", "777", new BigDecimal("1000")))
                 .when().post("api/money-transfer")
                 .then().statusCode(201);
+    }
+
+    @Test
+    @DisplayName("given a money transfer valid then should save transfer history")
+    public void shouldSaveTransferHistory() {
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new MoneyTransferRequest("999", "777", new BigDecimal("1000")))
+                .when().post("api/money-transfer")
+                .then().statusCode(201);
+
+        assertThat(tableTransferHistory).row(0)
+                .column("from_account_id").value().isEqualTo("999")
+                .column("to_account_id").value().isEqualTo("777")
+                .column("amount").value().isEqualTo("1000");
     }
 
     @Test

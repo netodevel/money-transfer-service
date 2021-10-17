@@ -4,6 +4,7 @@ import com.netodevel.config.AppException;
 import com.netodevel.money_transfer.dto.MoneyTransferRequest;
 import com.netodevel.money_transfer.dto.MoneyTransferResponse;
 import com.netodevel.money_transfer.entity.Account;
+import com.netodevel.money_transfer.entity.TransferHistory;
 
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
@@ -13,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import static javax.ws.rs.core.Response.ok;
@@ -41,6 +43,13 @@ public class MoneyTransferResource {
 
         toAccountId.amount = toAccountId.amount.add(moneyTransferRequest.amount());
         toAccountId.persist();
+
+        var transferHistory = new TransferHistory();
+        transferHistory.amout = moneyTransferRequest.amount();
+        transferHistory.dateTransfer = LocalDate.now();
+        transferHistory.fromAccountId = moneyTransferRequest.fromAccount();
+        transferHistory.toAccountId = moneyTransferRequest.toAccount();
+        transferHistory.persist();
 
         var response = new MoneyTransferResponse("999", "777", fromAccountId.amount);
         return ok(response).status(201).build();
